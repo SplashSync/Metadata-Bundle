@@ -1,0 +1,74 @@
+{
+    "name":                 "splash/metadata",
+    "description":          "Splash Metadata Accessor for Symfony Applications",
+
+    "type":                 "symfony-bundle",
+    "license":              "MIT",
+    "minimum-stability":    "dev",
+    "prefer-stable":        true,
+
+    "authors": [
+        {
+            "name":"Splash Sync",
+            "email":"contact@splashsync.com"
+        },
+        {
+            "name": "BadPixxel",
+            "email": "eshop.bpaquier@gmail.com"
+        }
+    ],
+
+    "autoload": {
+        "psr-4": {
+            "Splash\\Metadata\\":                       "src/"
+        }
+    },
+    
+    "autoload-dev": {
+        "psr-4": {
+            "Splash\\Metadata\\Test\\":                 "tests/"
+        }        
+    },
+    
+    "require": {
+        "php":                                          "^8.1",
+        "ext-json":                                     "*",
+        "splash/php-bundle":                            "dev-master",
+        "splash/openapi":                               "dev-master",
+        "burgov/key-value-form-bundle":                 "@stable",
+        "gaufrette/ftp-adapter":                        "@stable",
+        "gaufrette/phpseclib-sftp-adapter":             "@stable"
+    },
+    
+    "require-dev": {
+        "splash/toolkit":                               "dev-master",
+        "badpixxel/php-sdk":                            "dev-main"
+    },
+    "provide": {
+        "splash/faker":                                 "dev-master"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpro/grumphp": true,
+            "symfony/runtime": true
+        }
+    },
+    "extra": {
+        "public-dir": "tests/public"
+    },
+    "scripts": {
+        "auto-scripts": [
+            "php bin/console cache:clear --no-debug",
+            "php bin/console assets:install --relative",
+            "php bin/console doctrine:schema:update --force  --no-interaction --no-debug",
+            "find var/cache/dev/*.xml | while read -r i; do cp \"$i\" var/cache/dev/testContainer.xml; done"
+        ],
+        "post-install-cmd": [
+            "@auto-scripts",
+            "php bin/console sonata:user:create Toolkit toolkit@splashsync.com toolkit --super-admin || exit 0"
+        ],
+        "post-update-cmd": [
+            "@auto-scripts"
+        ]
+    }
+}
