@@ -1,0 +1,24 @@
+services:
+    _defaults:
+        autowire:       true
+        autoconfigure:  true
+
+    ########################################################################
+    # Splash Faker Generic Objects
+    splash.connector.doctrine.object.short:
+        class:      Splash\Metadata\Objects\Generic
+        public:     true
+        arguments:
+            - Splash\Metadata\Test\Bundle\Entity\ShortEntity
+        tags:
+            # Register Faker Standalone Connector Objects
+            - { name: "splash.standalone.object", type : "ShortEntity" }
+
+    splash.connector.doctrine.object.simple:
+        class:      Splash\Metadata\Objects\Generic
+        public:     true
+        arguments:
+            - Splash\Metadata\Test\Bundle\Entity\SimpleEntity
+        tags:
+            # Register Faker Standalone Connector Objects
+            - { name: "splash.standalone.object", type : "SimpleEntity" }

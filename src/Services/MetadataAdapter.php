@@ -1,0 +1,174 @@
+<?php
+
+namespace Splash\Metadata\Services;
+
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\QueryBuilder;
+use Splash\Client\Splash;
+use Splash\Components\FieldsFactory;
+use Splash\Metadata\Collectors\DoctrineMetadata;
+use Splash\Metadata\Interfaces\FieldsMetadataCollector;
+use Splash\Metadata\Mapping\FieldMetadata;
+use Splash\Metadata\Mapping\FieldsMetadataCollection;
+use Splash\Metadata\Mapping\ObjectMetadata;
+use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
+use function _PHPStan_758e5f118\RingCentral\Psr7\str;
+
+/**
+ * High Level Splash Generic Data Adapter
+ * Use Medata to Access Objects Class Data
+ */
+class MetadataAdapter
+{
+    public function __construct(
+        protected readonly MetadataCollector $collector,
+        protected readonly PropertyReader $reader,
+        protected readonly PropertySetter $setter,
+        protected readonly PropertyAccessor $propertyAccessor,
+    ) {
+    }
+
+    /**
+     * Get Metadata for a given Class
+     *
+     * @note Direct Forward to Metadata Collector
+     */
+    public function getObject(string $class): ObjectMetadata
+    {
+        return $this->collector->getObjectMetadata($class);
+    }
+
+    /**
+     * Get All Available Fields for a Given Class
+     *
+     * @note Direct Forward to Metadata Collector
+     */
+    public function getFields(string $class): array
+    {
+        return $this->collector->getFields($class);
+    }
+
+    /**
+     * Get Metadata for a given Fields ID
+     *
+     * @note Direct Forward to Metadata Collector
+     */
+    public function getField(string $class, string $identifier): ?FieldMetadata
+    {
+        return $this->collector->getField($class, $identifier);
+    }
+
+    /**
+     * Get an Object Field Data
+     *
+     * @note Direct Forward to Property Reader
+     */
+    public function getData(FieldMetadata $metadata, object $object): mixed
+    {
+        try {
+            return $this->reader->get($metadata, $object);
+        } catch (\Throwable|\TypeError $ex) {
+            return Splash::log()->errNull($ex);
+        }
+    }
+
+    /**
+     * Set an Object Field Data
+     *
+     * @note Direct Forward to Property Setter
+     */
+    public function setData(FieldMetadata $metadata, object $object, mixed $data): mixed
+    {
+        try {
+            return $this->setter->set($metadata, $object, $data);
+        } catch (\Throwable|\TypeError $ex) {
+            return Splash::log()->errNull($ex);
+        }
+    }
+
+    public function configureListQueryBuilder(string $class, QueryBuilder $builder, string $filter, string $alias = "c"): void
+    {
+        $conditions = array();
+        //====================================================================//
+        // Walk on Listed Fields
+        foreach ($this->getListedFields($class) as $fieldId => $fieldMetadata) {
+            //====================================================================//
+            // This is an Identifier Fields
+            if ($fieldMetadata->isObjectIdentifier()) {
+                $conditions[] = $builder->expr()->eq(
+                    sprintf('%s.%s', $alias, $fieldMetadata->id),
+                    ":eqFilter"
+                );
+                $builder->setParameter('eqFilter', $filter);
+
+                continue;
+            }
+            //====================================================================//
+            // This is an Searchable Fields
+            if ($fieldMetadata->isSearchable()) {
+                $conditions[] = $builder->expr()->like(
+                    sprintf('%s.%s', $alias, $fieldMetadata->id),
+                    ":textFilter"
+                );
+            }
+        }
+        //====================================================================//
+        // No Conditions Defined
+        if (!count($conditions)) {
+            return;
+        }
+        //====================================================================//
+        // Configure Query
+        $orx = $builder->expr()->orX();
+        foreach ($conditions as $condition) {
+            $orx->add($condition);
+        }
+        $builder->andWhere($orx);
+        $builder->setParameter('textFilter', "%".$filter."%");
+    }
+
+    /**
+     * Extract Listed Fields from Object Using Metadata
+     *
+     * @param class-string $class
+     * @param object $object
+     *
+     * @return array
+     */
+    public function extractListedFields(string $class, object $object): array
+    {
+        //====================================================================//
+        // Walk on Listed Fields
+        $values = array();
+        foreach ($this->getListedFields($class) as $fieldId => $fieldMetadata) {
+            // Read property value
+            $value = $this->propertyAccessor->getProperty($object, $fieldMetadata);
+            // If Identifier => Force 'id' as Key
+            $fieldId = $fieldMetadata->isObjectIdentifier() ? "id" : $fieldId;
+            // Ensure Scalar Value
+            $values[$fieldId] = is_scalar($value) ? (string) $value : null;
+        }
+
+        return $values;
+    }
+
+    /**
+     * Get Collection of Listed Fields from Object Class Using Metadata
+     *
+     * @param class-string $class
+     *
+     * @return FieldMetadata[]
+     */
+    private function getListedFields(string $class): array
+    {
+        /** @var array<string, FieldMetadata[]> $cache */
+        static $cache;
+
+        //====================================================================//
+        // Ensure Listed Fields Cache is Loaded
+        $cache ??= array();
+        $cache[$class] ??= $this->collector->getListedFields($class)->toArray();
+
+        return $cache[$class];
+    }
+}

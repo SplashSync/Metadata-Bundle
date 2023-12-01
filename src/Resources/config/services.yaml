@@ -1,0 +1,20 @@
+services:
+    _defaults:
+        autowire:       true
+        autoconfigure:  true
+
+    _instanceof:
+        Splash\Metadata\Interfaces\ObjectMetadataCollector:
+            tags:         ["splash.metadata.object.collector"]
+        Splash\Metadata\Interfaces\FieldsMetadataCollector:
+            tags:         ["splash.metadata.fields.collector"]
+
+    ########################################################################
+    # Auto-wire for Metadata Collectors
+    Splash\Metadata\Collectors\:
+      resource:     "../../Collectors"
+
+    ########################################################################
+    # Auto-wire for Services
+    Splash\Metadata\Services\:
+        resource: "../../Services"

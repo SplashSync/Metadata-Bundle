@@ -1,0 +1,16 @@
+
+splash:
+    ################################################################################
+    # List of Available Connector Connections
+    ################################################################################
+
+    connections:
+
+        ########################################################################
+        # Metadata Faker Server
+        metadata:
+            id:                 ThisIsMetadataWsId
+            key:                ThisIsNotASecretKeyForDoctrine
+            name:               Metadata Faker
+            connector:          standalone
+            host:               "http://127.0.0.1:8000/ws/splash"
