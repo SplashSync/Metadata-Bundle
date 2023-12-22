@@ -2,12 +2,24 @@
 
 declare(strict_types=1);
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\Attributes;
 
 use Attribute;
 use Splash\Metadata\Interfaces\FieldMetadataConfigurator;
 use Splash\Metadata\Mapping\FieldMetadata;
-use Splash\Models\Fields\ObjectField;
 
 /**
  * Splash Field Access Definitions
@@ -36,11 +48,22 @@ class Flags implements FieldMetadataConfigurator
     ) {
     }
 
-
     /**
      * @inheritDoc
      */
     public function configure(FieldMetadata $metadata): void
+    {
+        $this
+            ->configureMain($metadata)
+            ->configureLists($metadata)
+            ->configureMeta($metadata)
+        ;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    private function configureMain(FieldMetadata $metadata): static
     {
         //==============================================================================
         // Configure Required Flag
@@ -57,11 +80,15 @@ class Flags implements FieldMetadataConfigurator
         if (isset($this->write)) {
             $metadata->setWrite($this->write);
         }
-        //==============================================================================
-        // Configure Index Flag
-        if (isset($this->index)) {
-            $metadata->setIndex($this->index);
-        }
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    private function configureLists(FieldMetadata $metadata): static
+    {
         //==============================================================================
         // Configure In List Flag
         if (isset($this->listed)) {
@@ -74,6 +101,26 @@ class Flags implements FieldMetadataConfigurator
             $metadata->setHiddenList($this->listHidden);
         }
         //==============================================================================
+        // Configure Searchable Flag
+        if (isset($this->searchable)) {
+            $metadata->setSearchable($this->searchable);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    private function configureMeta(FieldMetadata $metadata): static
+    {
+        //==============================================================================
+        // Configure Index Flag
+        if (isset($this->index)) {
+            $metadata->setIndex($this->index);
+        }
+
+        //==============================================================================
         // Configure Primary Flag
         if (isset($this->primary)) {
             $metadata->setPrimary($this->primary);
@@ -83,10 +130,7 @@ class Flags implements FieldMetadataConfigurator
         if (isset($this->logged)) {
             $metadata->setIsLogged($this->logged);
         }
-        //==============================================================================
-        // Configure Searchable Flag
-        if (isset($this->searchable)) {
-            $metadata->setSearchable($this->searchable);
-        }
+
+        return $this;
     }
 }

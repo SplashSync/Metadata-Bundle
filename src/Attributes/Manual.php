@@ -22,13 +22,15 @@ use Splash\Metadata\Interfaces\FieldMetadataConfigurator;
 use Splash\Metadata\Mapping\FieldMetadata;
 
 /**
- * Mark Field as Indexed
+ * Splash Field Manual Access Definitions
+ * Field Data is Read | Write from Object Class
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class IsIndexed implements FieldMetadataConfigurator
+class Manual implements FieldMetadataConfigurator
 {
     public function __construct(
-        protected bool $indexed = true,
+        private readonly ?bool $read = true,
+        private readonly ?bool $write = true,
     ) {
     }
 
@@ -37,10 +39,10 @@ class IsIndexed implements FieldMetadataConfigurator
      */
     public function configure(FieldMetadata $metadata): void
     {
-        if ($this->indexed) {
-            $metadata
-                ->setIndex(true)
-            ;
+        //==============================================================================
+        // Configure Access Flag
+        if (isset($this->read) || isset($this->write)) {
+            $metadata->setManualAccess($this->read, $this->write);
         }
     }
 }
