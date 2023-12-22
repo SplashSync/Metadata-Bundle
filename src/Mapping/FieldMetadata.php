@@ -1,13 +1,35 @@
 <?php
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\Mapping;
 
-use Splash\Metadata\DataTransformer;
+use Splash\Components\FieldsManager;
+use Splash\Metadata\Models\Metadata\AccessorTrait;
+use Splash\Metadata\Models\Metadata\ManualAccessTrait;
+use Splash\Metadata\Models\Metadata\ParentTrait;
 use Splash\Models\Fields\ObjectField;
-use Splash\Metadata\Interfaces\SplashDataTransformer;
 
+/**
+ * Splash Metadata Parser - Field Information
+ */
 class FieldMetadata extends ObjectField
 {
+    use AccessorTrait;
+    use ManualAccessTrait;
+    use ParentTrait;
+
     /**
      * This is Identifier Field
      */
@@ -23,24 +45,6 @@ class FieldMetadata extends ObjectField
      */
     private bool $excluded = false;
 
-    /**
-     * Data Transformer Used for Data Convert
-     *
-     * transform => From Local Value to Splash
-     * reverseTransform => From Splash Value to Local
-     */
-    private SplashDataTransformer $dataTransformer;
-
-    /**
-     * Function to use as Getter
-     */
-    private ?string $getter = null;
-
-    /**
-     * Function to use as Setter
-     */
-    private ?string $setter = null;
-
     public function __construct(string $type = SPL_T_VARCHAR)
     {
         parent::__construct($type);
@@ -50,6 +54,18 @@ class FieldMetadata extends ObjectField
     // BASIC GETTER & SETTER
     //====================================================================//
 
+    /**
+     * @inheritdoc
+     */
+    public function getFieldId(): string
+    {
+        return $this->getChildId() ?? $this->id;
+    }
+
+    public function isListField(): bool
+    {
+        return !empty(FieldsManager::isListField($this->type));
+    }
 
     /**
      * Set Field as Object Identifier
@@ -76,7 +92,6 @@ class FieldMetadata extends ObjectField
     {
         return $this->objectIdentifier;
     }
-
 
     /**
      * Mark this Field as Searchable in Lists
@@ -117,67 +132,4 @@ class FieldMetadata extends ObjectField
     {
         return $this->excluded;
     }
-
-    /**
-     * Set Data Transformer Used for Data Convert
-     */
-    public function setDataTransformer(SplashDataTransformer $dataTransformer): static
-    {
-        $this->dataTransformer = $dataTransformer;
-
-        return $this;
-    }
-
-    /**
-     * Get Data Transformer Used for Data Convert
-     */
-    public function getDataTransformer(): ?SplashDataTransformer
-    {
-        return $this->dataTransformer ?? $this->detectDataTransformer();
-    }
-
-    public function getGetter(): ?string
-    {
-        return $this->getter;
-    }
-
-    public function setGetter(?string $getter): static
-    {
-        $this->getter = $getter;
-
-        return $this;
-    }
-
-    public function getSetter(): ?string
-    {
-        return $this->setter;
-    }
-
-    public function setSetter(?string $setter): static
-    {
-        $this->setter = $setter;
-
-        return $this;
-    }
-
-    //====================================================================//
-    // PRIVATE METHODS
-    //====================================================================//
-
-    /**
-     * Autodetect Data Transformer for field
-     */
-    public function detectDataTransformer(): ?SplashDataTransformer
-    {
-        return match($this->type) {
-            SPL_T_VARCHAR, SPL_T_TEXT => new DataTransformer\VarcharTransformer(),
-            SPL_T_BOOL => new DataTransformer\BooleanTransformer(),
-            SPL_T_INT => new DataTransformer\IntegerTransformer(),
-            SPL_T_DOUBLE => new DataTransformer\DoubleTransformer(),
-
-            default => null,
-        };
-    }
-
-
 }

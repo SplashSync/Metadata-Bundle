@@ -16,42 +16,41 @@
 namespace Splash\Metadata\Models\Objects;
 
 use Exception;
+use Splash\Components\FieldsManager;
 use Splash\Metadata\Services\MetadataAdapter;
-use Splash\Metadata\Services\MetadataCollector;
-use Splash\Metadata\Services\PropertyReader;
-use Splash\Metadata\Services\PropertySetter;
-use Splash\OpenApi\Fields as ApiFields;
 
 /**
  * Splash Simple Fields Access using Metadata
  */
-trait MetadataFieldsAwareTrait
+trait MetadataFieldsTrait
 {
     protected readonly string            $objectClass;
 
     protected readonly MetadataAdapter $metadataAdapter;
 
-//    /**
-//     * Build Objects Fields from Metadata Model.
-//     *
-//     * @throws Exception
-//     *
-//     * @return void
-//     */
-//    protected function buildMetadataSimpleFields(): void
-//    {
-//        ApiFields\Builder::buildModelFields($this->fieldsFactory(), $this->visitor->getModel());
-//    }
-//
     /**
-     * Read API Simple Field
+     * Build Objects Fields from Metadata Model.
+     *
+     * @throws Exception
+     *
+     * @return void
+     */
+    protected function buildMetadataFields(): void
+    {
+        $this->fieldsFactory()->merge(
+            $this->metadataAdapter->getFields($this->objectClass)
+        );
+    }
+
+    /**
+     * Read Fields using Metadata Parser
      *
      * @param string $key       Input List Key
      * @param string $fieldName Field Identifier / Name
      *
      * @throws Exception
      */
-    protected function getMetadataSimpleFields(string $key, string $fieldName): void
+    protected function getMetadataFields(string $key, string $fieldName): void
     {
         //====================================================================//
         // Check if Field Exists for Reading
@@ -59,14 +58,28 @@ trait MetadataFieldsAwareTrait
             return;
         }
         //====================================================================//
-        // Read Data
-        /** @phpstan-ignore-next-line  */
-        $this->out[$fieldName] = $this->metadataAdapter->getData($metadata, $this->object);
+        // Check if Field Allowed for Reading via Metadata
+        if (!$metadata->isAllowedRead()) {
+            return;
+        }
+        //====================================================================//
+        // Read List Data
+        if (FieldsManager::isListField($fieldName)) {
+            $this->out = array_replace_recursive($this->out, array(
+                FieldsManager::listName($fieldName) => $this->metadataAdapter->getData($metadata, $this->object)
+            ));
+        //====================================================================//
+        // Read Simple Data
+        } else {
+            /** @phpstan-ignore-next-line  */
+            $this->out[$fieldName] = $this->metadataAdapter->getData($metadata, $this->object);
+        }
+
         unset($this->in[$key]);
     }
 
     /**
-     * Write Given Fields
+     * Write Given Fields using Metadata Parser
      *
      * @param string                                       $fieldName Field Identifier / Name
      * @param null|array<string, null|array|scalar>|scalar $fieldData Field Data
@@ -75,7 +88,7 @@ trait MetadataFieldsAwareTrait
      *
      * @return void
      */
-    protected function setMetadataSimpleFields(string $fieldName, mixed $fieldData): void
+    protected function setMetadataFields(string $fieldName, mixed $fieldData): void
     {
         //====================================================================//
         // Check if Field Exists for Reading
@@ -84,7 +97,8 @@ trait MetadataFieldsAwareTrait
         }
         //====================================================================//
         // Check if Field Allow Writing
-        if (empty($metadata->write)) {
+        // Check if Field Allowed for Writing via Metadata
+        if (empty($metadata->write) || !$metadata->isAllowedWrite()) {
             return;
         }
         //====================================================================//
@@ -97,15 +111,15 @@ trait MetadataFieldsAwareTrait
         }
         unset($this->in[$fieldName]);
         //====================================================================//
-        // Data was Updated
-        if ($updated) {
-            $this->needUpdate();
-//            $prefix = ApiFields\Descriptor::getSubResourcePrefix($fieldName);
-//            if ($prefix) {
-//                $this->needUpdate(ucfirst($prefix));
-//            }
+        // Data Not Updated
+        if (!$updated) {
+            return;
         }
-
-//        dump($this->object);
+        //====================================================================//
+        // Mark Object as Updated
+        $this->needUpdate();
+        if ($parentMetadata = $metadata->getParent()) {
+            $this->needUpdate(ucfirst($parentMetadata->getFieldId()));
+        }
     }
 }
