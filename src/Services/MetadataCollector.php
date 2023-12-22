@@ -1,10 +1,22 @@
 <?php
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\Services;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Splash\Components\FieldsFactory;
-use Splash\Metadata\Collectors\DoctrineMetadata;
 use Splash\Metadata\Interfaces\FieldsMetadataCollector;
 use Splash\Metadata\Interfaces\ObjectMetadataCollector;
 use Splash\Metadata\Mapping\FieldMetadata;
@@ -39,6 +51,13 @@ class MetadataCollector // extends FieldsFactory
     ) {
     }
 
+    /**
+     * Collect Metadata for An Object Class
+     *
+     * @param class-string $class
+     *
+     * @return ObjectMetadata
+     */
     public function getObjectMetadata(string $class): ObjectMetadata
     {
         if (!isset($this->objectsMetadata[$class])) {
@@ -51,7 +70,14 @@ class MetadataCollector // extends FieldsFactory
         return $this->objectsMetadata[$class];
     }
 
-    public function getFields(string $class)
+    /**
+     * Get & Publish Splash object Fields
+     *
+     * @param string $class
+     *
+     * @return array
+     */
+    public function getFields(string $class): array
     {
         return $this->getFieldsMetadata($class)->publish();
     }
@@ -61,7 +87,7 @@ class MetadataCollector // extends FieldsFactory
         return $this->getFieldsMetadata($class)->get($identifier);
     }
 
-    public function getListedFields(string $class)
+    public function getListedFields(string $class): Collection
     {
         $expressionBuilder = Criteria::expr();
 
@@ -88,6 +114,4 @@ class MetadataCollector // extends FieldsFactory
 
         return $this->fieldCollections[$class];
     }
-
-
 }

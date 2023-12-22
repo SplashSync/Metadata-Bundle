@@ -1,18 +1,24 @@
 <?php
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\Services;
 
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\QueryBuilder;
 use Splash\Client\Splash;
-use Splash\Components\FieldsFactory;
-use Splash\Metadata\Collectors\DoctrineMetadata;
-use Splash\Metadata\Interfaces\FieldsMetadataCollector;
 use Splash\Metadata\Mapping\FieldMetadata;
-use Splash\Metadata\Mapping\FieldsMetadataCollection;
 use Splash\Metadata\Mapping\ObjectMetadata;
-use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
-use function _PHPStan_758e5f118\RingCentral\Psr7\str;
 
 /**
  * High Level Splash Generic Data Adapter
@@ -86,12 +92,16 @@ class MetadataAdapter
         }
     }
 
-    public function configureListQueryBuilder(string $class, QueryBuilder $builder, string $filter, string $alias = "c"): void
-    {
+    public function configureListQueryBuilder(
+        string $class,
+        QueryBuilder $builder,
+        string $filter,
+        string $alias = "c"
+    ): void {
         $conditions = array();
         //====================================================================//
         // Walk on Listed Fields
-        foreach ($this->getListedFields($class) as $fieldId => $fieldMetadata) {
+        foreach ($this->getListedFields($class) as $fieldMetadata) {
             //====================================================================//
             // This is an Identifier Fields
             if ($fieldMetadata->isObjectIdentifier()) {
@@ -131,7 +141,7 @@ class MetadataAdapter
      * Extract Listed Fields from Object Using Metadata
      *
      * @param class-string $class
-     * @param object $object
+     * @param object       $object
      *
      * @return array
      */

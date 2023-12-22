@@ -1,122 +1,61 @@
 <?php
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\Services;
 
 use Splash\Metadata\Mapping\FieldMetadata;
-use Splash\OpenApi\Fields\Descriptor;
 
 class PropertyReader
 {
     public function __construct(
         protected readonly MetadataCollector $fieldsProcessor,
         protected readonly PropertyAccessor $propertyAccessor,
+        protected readonly PropertyTransformer $propertyTransformer,
     ) {
     }
-
 
     /**
      * Get an Object Field Data
      *
-     * @param class-string $model   Target Model
-     * @param object       $object  Object to Update
-     * @param string       $fieldId Field Identifier / Name
+     * @param FieldMetadata $metadata Field Metadata
+     * @param object        $object   Object to Read
      *
-     * @throws Exception
-     *
-     * @return null|array<string, null|array<string, null|array|scalar>|object|scalar>|object|scalar
+     * @return null|array<string, null|array<string, null|array|scalar>|scalar>|scalar
      */
-    public function get(FieldMetadata $metadata, object $object)
+    public function get(FieldMetadata $metadata, object $object): array|float|bool|int|string|null
     {
-
-
-//        //====================================================================//
-//        // Detect SubResource Fields Types
-//        $prefix = Descriptor::getSubResourcePrefix($fieldId);
-//        if (!$prefix) {
+        //====================================================================//
+        // Detect Child / List Fields Types
+        if ($parentMetadata = $metadata->getParent()) {
             //====================================================================//
-            // Read Simple Fields Types
-            return $this->getSimpleData($metadata, $object);
-//        }
-//        //====================================================================//
-//        // Load SubResource Object
-//        $subResourceModel = Descriptor::getSubResourceModel($model, $prefix);
-//        $subResource = self::getRawData($object, $prefix);
-//        if (!$subResourceModel || !$subResource || !($subResource instanceof $subResourceModel)) {
-//            return null;
-//        }
-//
-//        return self::getSimpleData(
-//            $subResourceModel,
-//            $subResource,
-//            (string) Descriptor::getSubResourceField($fieldId)
-//        );
+            // Detect List Fields Types
+            if ($metadata->isListField()) {
+                //====================================================================//
+                // Read List Fields Types
+                return $this->getListData($parentMetadata, $metadata, $object);
+            }
+
+            //====================================================================//
+            // Read Child Fields Types
+            return $this->getChildData($parentMetadata, $metadata, $object);
+        }
+
+        //====================================================================//
+        // Read Simple Fields Types
+        return $this->getSimpleData($metadata, $object);
     }
-
-//    /**
-//     * Collect Required Fields
-//     *
-//     * @param AbstractVisitor $visitor
-//     * @param object          $inputs
-//     *
-//     * @throws Exception
-//     *
-//     * @return null|object
-//     */
-//    public static function getRequiredFields(AbstractVisitor $visitor, object $inputs): ?object
-//    {
-//        $newObject = array();
-//        //====================================================================//
-//        // Walk on required Field Ids
-//        foreach (Descriptor::getRequiredFields($visitor->getModel()) as $fieldId) {
-//            //====================================================================//
-//            // Ensure Field is Available
-//            if (!self::exists($inputs, $fieldId)) {
-//                Splash::log()->err("ErrLocalFieldMissing", __CLASS__, __FUNCTION__, $fieldId);
-//
-//                return null;
-//            }
-//            $newObject[$fieldId] = self::get($visitor->getModel(), $inputs, $fieldId);
-//        }
-//
-//        return $visitor->getHydrator()->hydrate($newObject, $visitor->getModel());
-//    }
-//
-//    /**
-//     * Get an Object List Field Data
-//     *
-//     * @param class-string $model   Target Model
-//     * @param object       $object
-//     * @param string       $listId
-//     * @param string       $fieldId
-//     *
-//     * @throws Exception
-//     *
-//     * @return array
-//     */
-//    public static function getListData(string $model, object $object, string $listId, string $fieldId): array
-//    {
-//        $results = array();
-//        //====================================================================//
-//        // Load Raw List Data
-//        $rawData = self::getRawData($object, $listId);
-//        if (!is_iterable($rawData)) {
-//            return $results;
-//        }
-//        //====================================================================//
-//        // Walk on Raw List Data
-//        foreach ($rawData as $index => $item) {
-//            if (!is_object($item) || !self::exists($item, $fieldId)) {
-//                $results[$index] = null;
-//
-//                continue;
-//            }
-//            $results[$index] = self::getSimpleData($model, $item, $fieldId);
-//        }
-//
-//        return $results;
-//    }
-
-
 
     /**
      * Get a Simple Object Field Data
@@ -126,32 +65,56 @@ class PropertyReader
         //====================================================================//
         // Read Property from Object
         $propertyValue = $this->propertyAccessor->getProperty($object, $metadata);
-        //====================================================================//
-        // Read Field Value Using Data Transformer
-        if ($dataTransformer = $metadata->getDataTransformer()) {
-            return $dataTransformer->transform($propertyValue);
-        }
 
-        return $propertyValue;
+        //====================================================================//
+        // Normalize Field Value Using Data Transformer
+        return $this->propertyTransformer->transform($object, $metadata, $propertyValue);
     }
 
     /**
-     * Extract Property from An Object
-     *
-     * @param object $object
-     * @param string $fieldId
-     *
-     * @return null|mixed
+     * Get a Child Object Field Data
      */
-    private static function getProperty(object $object, string $fieldId): mixed
-    {
-        foreach (array('get', 'is', 'has') as $prefix) {
-            $method = $prefix.ucfirst($fieldId);
-            if (method_exists($object, $method)) {
-                return $object->{$method}();
-            }
+    private function getChildData(
+        FieldMetadata $parentMetadata,
+        FieldMetadata $childMetadata,
+        object &$object
+    ): array|float|bool|int|string|null {
+        $children = $this->propertyAccessor->getProperty($object, $parentMetadata);
+        //====================================================================//
+        // Empty Child => Empty result
+        if (empty($children)) {
+            return null;
         }
 
-        return $object->{$fieldId} ?? null;
+        //====================================================================//
+        // Read Simple Fields Types
+        return $this->getSimpleData($childMetadata, $children);
+    }
+
+    /**
+     * Set a Child Object Field Data
+     */
+    private function getListData(FieldMetadata $parentMetadata, FieldMetadata $metadata, object &$object): ?array
+    {
+        //====================================================================//
+        // Load Children Objects
+        $rawData = $this->propertyAccessor->getProperty($object, $parentMetadata);
+        //====================================================================//
+        // Safety Check
+        if (!is_iterable($rawData)) {
+            return null;
+        }
+        //====================================================================//
+        // Walk on List Items
+        $listData = array();
+        foreach ($rawData as $index => $item) {
+            $listData[$index] = array(
+                $metadata->getChildId() => is_object($item)
+                    ? $this->getSimpleData($metadata, $item)
+                    : null
+            );
+        }
+
+        return $listData;
     }
 }

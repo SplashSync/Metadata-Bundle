@@ -1,5 +1,18 @@
 <?php
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\Services;
 
 use Splash\Metadata\Mapping\FieldMetadata;
@@ -25,7 +38,7 @@ class PropertyAccessor
         }
         //====================================================================//
         // Extract Field Id
-        $fieldId = ($field instanceof FieldMetadata) ? $field->id : $field;
+        $fieldId = ($field instanceof FieldMetadata) ? $field->getFieldId() : $field;
         //====================================================================//
         // Try Reading Using Generic Methods
         foreach (array('get', 'is', 'has') as $prefix) {
@@ -59,16 +72,14 @@ class PropertyAccessor
         }
         //====================================================================//
         // Extract Field Id
-        $fieldId = ($field instanceof FieldMetadata) ? $field->id : $field;
+        $fieldId = ($field instanceof FieldMetadata) ? $field->getFieldId() : $field;
         //====================================================================//
         // Write with Setter Method Detection
-        foreach (array('set') as $prefix) {
-            $method = $prefix.ucfirst($fieldId);
-            if (method_exists($object, $method)) {
-                $object->{$method}($fieldData);
+        $method = 'set'.ucfirst($fieldId);
+        if (method_exists($object, $method)) {
+            $object->{$method}($fieldData);
 
-                return true;
-            }
+            return true;
         }
         //====================================================================//
         // Write to Property
@@ -76,6 +87,22 @@ class PropertyAccessor
             $object->{$fieldId} = $fieldData;
 
             return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Create Child Property from An Object
+     */
+    public function createProperty(object $object, string|FieldMetadata $field): ?object
+    {
+        //====================================================================//
+        // Create with Given Factory Method
+        if (($field instanceof FieldMetadata) && ($factoryMethod = $field->getFactory())) {
+            if (is_callable(array($object, $factoryMethod))) {
+                return $object->{ $factoryMethod }();
+            }
         }
 
         return null;
