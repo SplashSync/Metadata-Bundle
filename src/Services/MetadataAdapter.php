@@ -37,6 +37,8 @@ class MetadataAdapter
     /**
      * Get Metadata for a given Class
      *
+     * @param class-string $class
+     *
      * @note Direct Forward to Metadata Collector
      */
     public function getObject(string $class): ObjectMetadata
@@ -47,6 +49,8 @@ class MetadataAdapter
     /**
      * Get All Available Fields for a Given Class
      *
+     * @param class-string $class
+     *
      * @note Direct Forward to Metadata Collector
      */
     public function getFields(string $class): array
@@ -56,6 +60,8 @@ class MetadataAdapter
 
     /**
      * Get Metadata for a given Fields ID
+     *
+     * @param class-string $class
      *
      * @note Direct Forward to Metadata Collector
      */
@@ -92,6 +98,11 @@ class MetadataAdapter
         }
     }
 
+    /**
+     * Configure Doctrine List Query Builder for Data Filtering
+     *
+     * @param class-string $class
+     */
     public function configureListQueryBuilder(
         string $class,
         QueryBuilder $builder,
@@ -171,7 +182,6 @@ class MetadataAdapter
      */
     private function getListedFields(string $class): array
     {
-        /** @var array<string, FieldMetadata[]> $cache */
         static $cache;
 
         //====================================================================//
@@ -179,6 +189,7 @@ class MetadataAdapter
         $cache ??= array();
         $cache[$class] ??= $this->collector->getListedFields($class)->toArray();
 
+        /** @var array<string, FieldMetadata[]> $cache */
         return $cache[$class];
     }
 }

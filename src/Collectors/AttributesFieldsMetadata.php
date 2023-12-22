@@ -84,6 +84,8 @@ class AttributesFieldsMetadata implements FieldsMetadataCollector
     /**
      * Get Splash Field Configurator Attributes for a Class & Property
      *
+     * @param class-string $objectClass
+     *
      * @return FieldMetadataConfigurator[]
      */
     private function getFieldConfigurators(string $objectClass, string $propertyName): array

@@ -59,9 +59,9 @@ interface FieldDataTransformer
      *
      * @throws Exception when the transformation fails
      *
-     * @return mixed
+     * @return null|array|bool|float|int|string
      */
-    public function transform(object $subject, mixed $value): mixed;
+    public function transform(object $subject, mixed $value): array|float|bool|int|string|null;
 
     /**
      * Transforms a value from the transformed representation to its original

@@ -20,7 +20,7 @@ use Splash\Metadata\Interfaces\FieldDataTransformer;
 /**
  * Base String Fields Transformer
  */
-class AbstractStringTransformer implements FieldDataTransformer
+abstract class AbstractStringTransformer implements FieldDataTransformer
 {
     /**
      * @inheritDoc

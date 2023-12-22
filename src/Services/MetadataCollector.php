@@ -73,7 +73,7 @@ class MetadataCollector // extends FieldsFactory
     /**
      * Get & Publish Splash object Fields
      *
-     * @param string $class
+     * @param class-string $class
      *
      * @return array
      */
@@ -82,11 +82,26 @@ class MetadataCollector // extends FieldsFactory
         return $this->getFieldsMetadata($class)->publish();
     }
 
+    /**
+     * Get a Specific Field Metadata
+     *
+     * @param class-string $class
+     * @param string       $identifier
+     *
+     * @return null|FieldMetadata
+     */
     public function getField(string $class, string $identifier): ?FieldMetadata
     {
         return $this->getFieldsMetadata($class)->get($identifier);
     }
 
+    /**
+     * Get Collection of Listed Fields
+     *
+     * @param class-string $class
+     *
+     * @return Collection
+     */
     public function getListedFields(string $class): Collection
     {
         $expressionBuilder = Criteria::expr();
@@ -98,6 +113,8 @@ class MetadataCollector // extends FieldsFactory
     }
 
     /**
+     * Collect Class Fields Metadata
+     *
      * @param class-string $class
      *
      * @return FieldsMetadataCollection

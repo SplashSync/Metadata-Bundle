@@ -48,6 +48,8 @@ trait ParentTrait
 
     /**
      * Set Parent Child Field Relation
+     *
+     * @param class-string $childClass
      */
     public function setParent(FieldMetadata $parent, string $childClass, string $childId): static
     {
@@ -124,6 +126,8 @@ trait ParentTrait
 
     /**
      * Get Child Object Class
+     *
+     * @return null|class-string
      */
     public function getChildClass(): ?string
     {

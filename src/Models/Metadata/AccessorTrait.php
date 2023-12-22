@@ -125,6 +125,8 @@ trait AccessorTrait
 
     /**
      * Set Data Transformer Used for Data Convert
+     *
+     * @param null|class-string $dataTransformer
      */
     public function setDataTransformer(?string $dataTransformer): static
     {
@@ -153,6 +155,7 @@ trait AccessorTrait
         //====================================================================//
         // Detect List Fields
         $type = FieldsManager::fieldName($this->type) ?? $this->type;
+
         //====================================================================//
         // Detect Generic Data Transformer
         return match ($type) {

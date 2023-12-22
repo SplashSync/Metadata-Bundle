@@ -82,7 +82,7 @@ class PropertyReader
         $children = $this->propertyAccessor->getProperty($object, $parentMetadata);
         //====================================================================//
         // Empty Child => Empty result
-        if (empty($children)) {
+        if (!is_object($children)) {
             return null;
         }
 

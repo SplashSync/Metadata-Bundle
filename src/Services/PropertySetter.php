@@ -114,10 +114,8 @@ class PropertySetter
 
     /**
      * Set a Child Object Field Data
-     *
-     * @param mixed $fieldData
      */
-    private function setListData(FieldMetadata $parentMetadata, object &$object, $fieldData): ?bool
+    private function setListData(FieldMetadata $parentMetadata, object &$object, mixed $fieldData): bool
     {
         $updated = false;
         //====================================================================//
@@ -135,7 +133,12 @@ class PropertySetter
                 }
                 //====================================================================//
                 // Update / Create Item
-                $updated |= $this->setListDataItem($parentMetadata, $object, $itemData, array_shift($originData));
+                $updated = $this->setListDataItem(
+                    $parentMetadata,
+                    $object,
+                    $itemData,
+                    array_shift($originData)
+                ) || $updated;
             }
         }
         //====================================================================//
@@ -175,11 +178,11 @@ class PropertySetter
         foreach ($parentMetadata->getChildren() as $childMetadata) {
             //====================================================================//
             // Write Simple Fields Types
-            $updated |= $this->setSimpleData(
+            $updated = $this->setSimpleData(
                 $childMetadata,
                 $originItem,
                 $itemData[$childMetadata->getChildId()] ?? null
-            );
+            ) || $updated;
         }
         //====================================================================//
         // Add New Item to Collection

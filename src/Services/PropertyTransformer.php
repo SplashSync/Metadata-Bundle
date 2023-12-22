@@ -39,10 +39,12 @@ class PropertyTransformer
      * @param FieldMetadata $metadata Field Metadata Descriptor
      * @param mixed         $value    The value in the original representation
      *
-     * @return mixed
+     * @return null|array|bool|float|int|string
      */
-    public function transform(object $subject, FieldMetadata $metadata, mixed $value): mixed
+    public function transform(object $subject, FieldMetadata $metadata, mixed $value): array|float|bool|int|string|null
     {
+        //====================================================================//
+        // Apply Data Transformer to Property
         if ($transformer = $this->getTransformer($metadata)) {
             try {
                 return $transformer->transform($subject, $value);
@@ -53,7 +55,9 @@ class PropertyTransformer
             }
         }
 
-        return $value;
+        //====================================================================//
+        // Safety Check => Property is Already in a Suitable Format
+        return $this->validateProperty($value);
     }
 
     /**
@@ -106,6 +110,9 @@ class PropertyTransformer
         return ($current == $new);
     }
 
+    /**
+     * Identify Data Transformer using Field Metadata
+     */
     private function getTransformer(FieldMetadata $metadata): ?FieldDataTransformer
     {
         if (!$transformerClass = $metadata->getDataTransformer()) {
@@ -116,6 +123,21 @@ class PropertyTransformer
             if ($transformer instanceof $transformerClass) {
                 return $transformer;
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * Identify Data Transformer using Field Metadata
+     */
+    private function validateProperty(mixed $value): array|float|bool|int|string|null
+    {
+        if (is_null($value) || is_scalar($value) || is_array($value)) {
+            return $value;
+        }
+        if ($value instanceof \ArrayAccess) {
+            return (array) $value;
         }
 
         return null;
