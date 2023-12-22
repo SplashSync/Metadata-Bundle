@@ -15,26 +15,24 @@
 
 namespace Splash\Metadata\Test\Bundle\Entity;
 
-use DateTime;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Splash\Metadata\Attributes as SPL;
 
 /**
- * Just a Short Doctrine Entity for very Simple Tests
+ * Small Child Entity for Testing Relations
  */
 #[ORM\Entity()]
-#[ORM\Table("spl_doctrine_short")]
-#[SPL\SplashObject(
-    name: "Short",
-    ico: "fa fa-compress"
-)]
-class ShortEntity
+#[ORM\Table("spl_doctrine_child")]
+class ChildEntity
 {
     #[ORM\Id]
     #[ORM\Column(type: Types::INTEGER)]
     #[ORM\GeneratedValue]
     public ?int $id = null;
+
+    #[ORM\ManyToOne(targetEntity: OneToManyEntity::class, inversedBy: 'children')]
+    public ?OneToManyEntity $parent = null;
 
     /**
      * Simple Direct Access Varchar
@@ -42,26 +40,6 @@ class ShortEntity
     #[ORM\Column(type: Types::STRING)]
     #[SPL\Field(type: SPL_T_VARCHAR, desc: "This is a Simple Varchar !!")]
     public string $varchar;
-
-    /**
-     * Simple Direct Access Email
-     */
-    #[ORM\Column(type: Types::STRING, nullable: true)]
-    #[SPL\Field(type: SPL_T_EMAIL, desc: "Type changed to email via PHP Attribute...")]
-    public ?string $email;
-
-    /**
-     * Simple Direct Access Url
-     */
-    #[ORM\Column(type: Types::STRING, nullable: true)]
-    #[SPL\Field(type: SPL_T_URL, desc: "Type changed to url via PHP Attribute...")]
-    public ?string $url;
-
-    /**
-     * Simple Direct Access Text
-     */
-    #[ORM\Column(type: Types::TEXT, nullable: true)]
-    public ?string $text = null;
 
     /**
      * Simple Direct Access Integer
@@ -80,20 +58,6 @@ class ShortEntity
      */
     #[ORM\Column(type: Types::BOOLEAN, nullable: true)]
     public ?bool $bool = null;
-
-    /**
-     * Simple Direct Access Date
-     */
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    #[SPL\Field(desc: "Simple Date Field")]
-    public ?DateTime $date = null;
-
-    /**
-     * Simple Direct Access Datetime
-     */
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    #[SPL\Field(desc: "Complete Date Field")]
-    public ?DateTime $dateTime = null;
 
     public function getId(): ?int
     {
