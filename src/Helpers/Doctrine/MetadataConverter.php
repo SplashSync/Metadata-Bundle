@@ -1,17 +1,31 @@
 <?php
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\Helpers\Doctrine;
 
 use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\ClassMetadataInfo;
 
 class MetadataConverter
 {
     /**
      * Check if Field is Object Identifier
      */
-    public static function isIdentifier(array $fieldMapping): ?bool
+    public static function isIdentifier(array $fieldMapping, ClassMetadataInfo $classMetadata = null): ?bool
     {
-        return !empty($fieldMapping['id'] ?? false) ? true : null;
+        return !empty($fieldMapping['id'] ?? false) ? !$classMetadata : null;
     }
 
     /**
@@ -28,9 +42,9 @@ class MetadataConverter
     public static function isRequired(array $fieldMapping): bool
     {
         return (
-                empty($fieldMapping['nullable'] ?? true)
-                || !empty($fieldMapping['generated'] ?? false)
-            )
+            empty($fieldMapping['nullable'] ?? true)
+            || !empty($fieldMapping['generated'] ?? false)
+        )
             && empty($fieldMapping['id'] ?? false)
         ;
     }
@@ -38,10 +52,11 @@ class MetadataConverter
     /**
      * Check if Field is Read Only
      */
-    public static function isReadOnly(array $fieldMapping): bool
+    public static function isReadOnly(array $fieldMapping, ClassMetadataInfo $classMetadata = null): bool
     {
         return !empty($fieldMapping['generated'] ?? false)
             || !empty($fieldMapping['id'] ?? false)
+            || ($classMetadata && $classMetadata->isReadOnly)
         ;
     }
 
@@ -67,12 +82,9 @@ class MetadataConverter
             // Date Fields
             Types::DATE_MUTABLE, Types::DATE_IMMUTABLE => SPL_T_DATE,
             Types::DATETIME_MUTABLE, Types::DATETIME_IMMUTABLE => SPL_T_DATETIME,
-            Types::DATETIMETZ_MUTABLE, Types::DATETIMETZ_IMMUTABLE  => SPL_T_DATETIME,
+            Types::DATETIMETZ_MUTABLE, Types::DATETIMETZ_IMMUTABLE => SPL_T_DATETIME,
 
             default => null,
         };
     }
-
-
-
 }

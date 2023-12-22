@@ -15,22 +15,17 @@
 
 namespace Splash\Metadata\Interfaces;
 
-use Splash\Metadata\Mapping\ObjectMetadata;
+use DateTimeZone;
 
 /**
- * Interface for All Splash Objects Metadata Collectors
+ * Indicate object has Timezone Requirement
  */
-interface ObjectMetadataCollector
+interface TimezoneAware
 {
-    const OBJECT_COLLECTOR = "splash.metadata.object.collector";
-
     /**
-     * Configure Splash Object Metadata for a Class
+     * Get Object Default Timezone
      *
-     * @param ObjectMetadata $objectMetadata
-     * @param class-string   $objectClass
-     *
-     * @return void
+     * @return DateTimeZone
      */
-    public function configureObjectMetadata(ObjectMetadata $objectMetadata, string $objectClass): void;
+    public function getTimezone(): DateTimeZone;
 }
