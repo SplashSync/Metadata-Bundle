@@ -16,26 +16,24 @@
 namespace Splash\Metadata\DataTransformer;
 
 use Splash\Metadata\Interfaces\FieldDataTransformer;
-use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
- * Integer Fields Transformer
+ * Base String Fields Transformer
  */
-#[AutoconfigureTag(FieldDataTransformer::TAG)]
-class IntegerTransformer implements FieldDataTransformer
+class AbstractStringTransformer implements FieldDataTransformer
 {
     /**
      * @inheritDoc
      */
-    public function transform(object $subject, mixed $value): ?int
+    public function transform(object $subject, mixed $value): ?string
     {
-        return is_scalar($value) ? (int) $value : null;
+        return is_scalar($value) ? (string) $value : null;
     }
 
     /**
      * @inheritDoc
      */
-    public function reverseTransform(object $subject, mixed $value): ?int
+    public function reverseTransform(object $subject, mixed $value): ?string
     {
         return $this->transform($subject, $value);
     }
@@ -45,6 +43,6 @@ class IntegerTransformer implements FieldDataTransformer
      */
     public function isSame(object $subject, mixed $current, mixed $new): bool
     {
-        return ($current == $new);
+        return ($current === $new);
     }
 }

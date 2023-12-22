@@ -1,46 +1,35 @@
 <?php
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\Collectors;
 
-
 use ReflectionAttribute;
-use ReflectionNamedType;
 use ReflectionProperty;
+use Splash\Client\Splash;
 use Splash\Metadata\Interfaces\FieldMetadataConfigurator;
 use Splash\Metadata\Interfaces\FieldsMetadataCollector;
-use Splash\Metadata\Interfaces\ObjectMetadataCollector;
-use Splash\Metadata\Interfaces\ObjectMetadataConfigurator;
 use Splash\Metadata\Mapping\FieldMetadata;
 use Splash\Metadata\Mapping\FieldsMetadataCollection;
-use Splash\Metadata\Mapping\ObjectMetadata;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
- * Collect Splash Objects Metadata using PHP Attributes
+ * Collect Splash Objects Fields Metadata using PHP Attributes
  */
-class AttributesMetadata implements ObjectMetadataCollector, FieldsMetadataCollector
+#[AutoconfigureTag(FieldsMetadataCollector::FIELDS_COLLECTOR, array("priority" => -1))]
+class AttributesFieldsMetadata implements FieldsMetadataCollector
 {
-    /**
-     * @inheritDoc
-     */
-    public function configureObjectMetadata(ObjectMetadata $objectMetadata, string $objectClass): void
-    {
-        //==============================================================================
-        // Build Reflexion Class
-        $reflexion = new \ReflectionClass($objectClass);
-        //==============================================================================
-        // Walk on PHP Attributes
-        foreach($reflexion->getAttributes() as $phpAttribute) {
-            //==============================================================================
-            // Filter on Splash Metadata Configurator
-            if (!$objectConfigurator = $this->isObjectConfigurator($phpAttribute)) {
-                continue;
-            }
-            //==============================================================================
-            // Configure Object Metadata
-            $objectConfigurator->configure($objectMetadata);
-        }
-    }
-
     /**
      * @inheritDoc
      */
@@ -51,11 +40,11 @@ class AttributesMetadata implements ObjectMetadataCollector, FieldsMetadataColle
         $reflexion = new \ReflectionClass($objectClass);
         //==============================================================================
         // Walk on Class Properties
-        foreach($reflexion->getProperties() as $property) {
+        foreach ($reflexion->getProperties() as $property) {
             $fieldMetadata = null;
             //==============================================================================
             // Walk on PHP Attributes
-            foreach($property->getAttributes() as $phpAttribute) {
+            foreach ($property->getAttributes() as $phpAttribute) {
                 //==============================================================================
                 // Filter on Splash Metadata Configurator
                 if (!$fieldConfigurator = $this->isFieldConfigurator($phpAttribute)) {
@@ -75,19 +64,64 @@ class AttributesMetadata implements ObjectMetadataCollector, FieldsMetadataColle
             $this->configureName($property, $fieldMetadata);
             $this->configureMode($property, $fieldMetadata);
         }
+
+        //==============================================================================
+        // Walk on Defined Fields
+        foreach ($collection as $fieldMetadata) {
+            //==============================================================================
+            // Filter on Fields with
+            if (!($childId = $fieldMetadata->getChildId()) || !($childClass = $fieldMetadata->getChildClass())) {
+                continue;
+            }
+            //==============================================================================
+            // Walk on Field Configurators
+            foreach ($this->getFieldConfigurators($childClass, $childId) as $fieldConfigurator) {
+                $fieldConfigurator->configure($fieldMetadata);
+            }
+        }
     }
 
     /**
-     * Check if PHP Attribute is an Object Configurator
+     * Get Splash Field Configurator Attributes for a Class & Property
+     *
+     * @return FieldMetadataConfigurator[]
      */
-    private function isObjectConfigurator(ReflectionAttribute $phpAttribute): ?ObjectMetadataConfigurator
+    private function getFieldConfigurators(string $objectClass, string $propertyName): array
     {
-        if (!is_subclass_of($phpAttribute->getName(),  ObjectMetadataConfigurator::class)) {
-            return null;
-        }
-        $configurator = $phpAttribute->newInstance();
+        static $reflexions;
 
-        return ($configurator instanceof ObjectMetadataConfigurator) ? $configurator : null;
+        $reflexions ??= array();
+        $fieldConfigurators = array();
+
+        //==============================================================================
+        // Build Reflexion Class
+        try {
+            $reflexion = $reflexions[$objectClass] ??= new \ReflectionClass($objectClass);
+        } catch (\ReflectionException $e) {
+            Splash::log()->report($e);
+
+            return array();
+        }
+
+        //==============================================================================
+        // Get Reflexion Class Property
+        try {
+            $property = $reflexion->getProperty($propertyName);
+        } catch (\ReflectionException $e) {
+            return array();
+        }
+        //==============================================================================
+        // Walk on PHP Attributes
+        foreach ($property->getAttributes() as $phpAttribute) {
+            //==============================================================================
+            // Filter on Splash Metadata Configurator
+            if (!$fieldConfigurator = $this->isFieldConfigurator($phpAttribute)) {
+                continue;
+            }
+            $fieldConfigurators[] = $fieldConfigurator;
+        }
+
+        return $fieldConfigurators;
     }
 
     /**
@@ -95,7 +129,7 @@ class AttributesMetadata implements ObjectMetadataCollector, FieldsMetadataColle
      */
     private function isFieldConfigurator(ReflectionAttribute $phpAttribute): ?FieldMetadataConfigurator
     {
-        if (!is_subclass_of($phpAttribute->getName(),  FieldMetadataConfigurator::class)) {
+        if (!is_subclass_of($phpAttribute->getName(), FieldMetadataConfigurator::class)) {
             return null;
         }
         $configurator = $phpAttribute->newInstance();
@@ -116,8 +150,8 @@ class AttributesMetadata implements ObjectMetadataCollector, FieldsMetadataColle
         //==============================================================================
         // Configure Type from PHP Property Type
         $phpType = $phpProperty->getType();
-        if ($phpType instanceof ReflectionNamedType) {
-            $metadata->type = match($phpType->getName()){
+        if ($phpType instanceof \ReflectionNamedType) {
+            $metadata->type = match ($phpType->getName()) {
                 "string" => SPL_T_VARCHAR,
                 "bool" => SPL_T_BOOL,
                 "int" => SPL_T_INT,
@@ -127,7 +161,6 @@ class AttributesMetadata implements ObjectMetadataCollector, FieldsMetadataColle
             };
         }
     }
-
 
     /**
      * Auto-Configure Field Name

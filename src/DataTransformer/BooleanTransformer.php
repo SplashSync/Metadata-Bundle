@@ -1,18 +1,33 @@
 <?php
 
+/*
+ *  This file is part of SplashSync Project.
+ *
+ *  Copyright (C) Splash Sync  <www.splashsync.com>
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ *  For the full copyright and license information, please view the LICENSE
+ *  file that was distributed with this source code.
+ */
+
 namespace Splash\Metadata\DataTransformer;
 
-use Splash\Metadata\Interfaces\SplashDataTransformer;
+use Splash\Metadata\Interfaces\FieldDataTransformer;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
  * Boolean Fields Transformer
  */
-class BooleanTransformer implements SplashDataTransformer
+#[AutoconfigureTag(FieldDataTransformer::TAG)]
+class BooleanTransformer implements FieldDataTransformer
 {
     /**
      * @inheritDoc
      */
-    public function transform(mixed $value): bool
+    public function transform(object $subject, mixed $value): bool
     {
         return !empty($value);
     }
@@ -20,7 +35,7 @@ class BooleanTransformer implements SplashDataTransformer
     /**
      * @inheritDoc
      */
-    public function reverseTransform(mixed $value): bool
+    public function reverseTransform(object $subject, mixed $value): bool
     {
         if (!is_scalar($value)) {
             return false;
@@ -32,7 +47,7 @@ class BooleanTransformer implements SplashDataTransformer
     /**
      * @inheritDoc
      */
-    public function isSame(mixed $current, mixed $new): bool
+    public function isSame(object $subject, mixed $current, mixed $new): bool
     {
         return ($current == $new);
     }

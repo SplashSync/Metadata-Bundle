@@ -15,13 +15,9 @@
 
 namespace Splash\Metadata\DataTransformer;
 
-use Splash\Metadata\Interfaces\FieldDataTransformer;
-use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
-
 /**
- * Boolean Fields Transformer
+ * Datetime Fields Transformer
  */
-#[AutoconfigureTag(FieldDataTransformer::TAG)]
-class VarcharTransformer extends AbstractStringTransformer
+class DatetimeTransformer extends AbstractDatetimeTransformer
 {
 }
