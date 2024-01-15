@@ -47,7 +47,7 @@ abstract class AbstractDatetimeTransformer implements FieldDataTransformer
 
         try {
             return $this->format($subject, new DateTime((string) $value));
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             return null;
         }
     }

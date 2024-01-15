@@ -68,8 +68,8 @@ trait MetadataFieldsTrait
             $this->out = array_replace_recursive($this->out, array(
                 FieldsManager::listName($fieldName) => $this->metadataAdapter->getData($metadata, $this->object)
             ));
-        //====================================================================//
-        // Read Simple Data
+            //====================================================================//
+            // Read Simple Data
         } else {
             /** @phpstan-ignore-next-line  */
             $this->out[$fieldName] = $this->metadataAdapter->getData($metadata, $this->object);
