@@ -18,14 +18,18 @@ namespace Splash\Metadata\Collectors;
 use ReflectionAttribute;
 use ReflectionProperty;
 use Splash\Client\Splash;
+use Splash\Components\FieldsManager;
 use Splash\Metadata\Interfaces\FieldMetadataConfigurator;
 use Splash\Metadata\Interfaces\FieldsMetadataCollector;
+use Splash\Metadata\Interfaces\SubResourceMetadataConfigurator;
 use Splash\Metadata\Mapping\FieldMetadata;
 use Splash\Metadata\Mapping\FieldsMetadataCollection;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
  * Collect Splash Objects Fields Metadata using PHP Attributes
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 #[AutoconfigureTag(FieldsMetadataCollector::FIELDS_COLLECTOR, array("priority" => -1))]
 class AttributesFieldsMetadata implements FieldsMetadataCollector
@@ -36,35 +40,8 @@ class AttributesFieldsMetadata implements FieldsMetadataCollector
     public function getFieldsMetadata(FieldsMetadataCollection $collection, string $objectClass): void
     {
         //==============================================================================
-        // Build Reflexion Class
-        $reflexion = new \ReflectionClass($objectClass);
-        //==============================================================================
-        // Walk on Class Properties
-        foreach ($reflexion->getProperties() as $property) {
-            $fieldMetadata = null;
-            //==============================================================================
-            // Walk on PHP Attributes
-            foreach ($property->getAttributes() as $phpAttribute) {
-                //==============================================================================
-                // Filter on Splash Metadata Configurator
-                if (!$fieldConfigurator = $this->isFieldConfigurator($phpAttribute)) {
-                    continue;
-                }
-                //==============================================================================
-                // Configure Field Metadata
-                $fieldMetadata = $collection->getOrCreate($property->getName(), "");
-                $fieldConfigurator->configure($fieldMetadata);
-            }
-            if (!isset($fieldMetadata)) {
-                continue;
-            }
-            //==============================================================================
-            // Complete Configure Using Property Metadata
-            $this->configureType($property, $fieldMetadata);
-            $this->configureName($property, $fieldMetadata);
-            $this->configureMode($property, $fieldMetadata);
-        }
-
+        // Walk on Class Properties to Collect Metadata
+        $this->getPropertiesMetadata($collection, $objectClass);
         //==============================================================================
         // Walk on Defined Fields
         foreach ($collection as $fieldMetadata) {
@@ -79,6 +56,131 @@ class AttributesFieldsMetadata implements FieldsMetadataCollector
                 $fieldConfigurator->configure($fieldMetadata);
             }
         }
+    }
+
+    /**
+     * Configure Metadata for All Class Properties
+     *
+     * @param class-string $objectClass
+     */
+    public function getPropertiesMetadata(
+        FieldsMetadataCollection $collection,
+        string $objectClass,
+        FieldMetadata $parentMetadata = null,
+        SubResourceMetadataConfigurator $parentConfigurator = null
+    ): void {
+        static $reflexions;
+        $reflexions ??= array();
+
+        //==============================================================================
+        // Build Reflexion Class
+        try {
+            $reflexion = $reflexions[$objectClass] ??= new \ReflectionClass($objectClass);
+        } catch (\ReflectionException $e) {
+            return;
+        }
+        //==============================================================================
+        // Walk on Class Properties
+        foreach ($reflexion->getProperties() as $property) {
+            $fieldMetadata = null;
+            //==============================================================================
+            // Walk on PHP Attributes
+            foreach ($property->getAttributes() as $phpAttribute) {
+                //==============================================================================
+                // This a Field Metadata Configurator
+                $fieldMetadata = $this->getMetadataFromFieldConfigurator(
+                    $property,
+                    $phpAttribute,
+                    $collection,
+                    $objectClass,
+                    $parentMetadata,
+                    $parentConfigurator
+                );
+                //==============================================================================
+                // This a SubRessource Metadata Configurator
+                $fieldMetadata ??= $this->getMetadataFromSubResourceConfigurator(
+                    $property,
+                    $phpAttribute,
+                    $collection
+                );
+            }
+            if (!isset($fieldMetadata)) {
+                continue;
+            }
+            //==============================================================================
+            // Complete Configure Using Property Metadata
+            $this->configureType($property, $fieldMetadata);
+            $this->configureName($property, $fieldMetadata);
+            $this->configureMode($property, $fieldMetadata);
+        }
+    }
+
+    /**
+     * Collect Field Metadata from Field Configurator
+     *
+     * @param class-string $objectClass
+     */
+    public function getMetadataFromFieldConfigurator(
+        ReflectionProperty $phpProperty,
+        ReflectionAttribute $phpAttribute,
+        FieldsMetadataCollection $collection,
+        string $objectClass,
+        FieldMetadata $parentMetadata = null,
+        SubResourceMetadataConfigurator $parentConfigurator = null
+    ): ?FieldMetadata {
+        //==============================================================================
+        // This a Field Metadata Configurator
+        if (!$fieldConfigurator = $this->isFieldConfigurator($phpAttribute)) {
+            return null;
+        }
+        //==============================================================================
+        // Create Field Metadata from Parent
+        if ($parentMetadata && $parentConfigurator) {
+            $fieldMetadata = $collection->getOrCreate(
+                $parentConfigurator->getChildrenID($parentMetadata, $phpProperty),
+                ""
+            );
+            $fieldMetadata->setParent($parentMetadata, $objectClass, $phpProperty->getName());
+        } else {
+            $fieldMetadata = $collection->getOrCreate($phpProperty->getName(), "");
+        }
+        //==============================================================================
+        // Configure Field Metadata
+        $fieldConfigurator->configure($fieldMetadata);
+        //==============================================================================
+        // Configure Field Metadata from Parent
+        if ($parentMetadata && $parentConfigurator) {
+            $parentConfigurator->configureChildren($parentMetadata, $fieldMetadata);
+        }
+
+        return $fieldMetadata;
+    }
+
+    /**
+     * Collect Field Metadata from Sub Resource Configurator
+     */
+    public function getMetadataFromSubResourceConfigurator(
+        ReflectionProperty $phpProperty,
+        ReflectionAttribute $phpAttribute,
+        FieldsMetadataCollection $collection,
+    ): ?FieldMetadata {
+        //==============================================================================
+        // This a SubRessource Metadata Configurator
+        if (!$resourceConfigurator = $this->isSubResourceConfigurator($phpAttribute)) {
+            return null;
+        }
+        //==============================================================================
+        // Configure Parent Field Metadata
+        $fieldMetadata = $collection->getOrCreate($phpProperty->getName(), "");
+        $resourceConfigurator->configureParent($fieldMetadata);
+        //==============================================================================
+        // Configure Children Field Metadata
+        $childrenClass = $resourceConfigurator->getChildrenClass($phpProperty);
+        if ($childrenClass && class_exists($childrenClass)) {
+            $this->getPropertiesMetadata($collection, $childrenClass, $fieldMetadata, $resourceConfigurator);
+        }
+
+        return $fieldMetadata;
     }
 
     /**
@@ -140,6 +242,19 @@ class AttributesFieldsMetadata implements FieldsMetadataCollector
     }
 
     /**
+     * Check if PHP Attribute is a Sub-Ressource Configurator
+     */
+    private function isSubResourceConfigurator(ReflectionAttribute $phpAttribute): ?SubResourceMetadataConfigurator
+    {
+        if (!is_subclass_of($phpAttribute->getName(), SubResourceMetadataConfigurator::class)) {
+            return null;
+        }
+        $configurator = $phpAttribute->newInstance();
+
+        return ($configurator instanceof SubResourceMetadataConfigurator) ? $configurator : null;
+    }
+
+    /**
      * Auto-Configure Field Type
      */
     private function configureType(ReflectionProperty $phpProperty, FieldMetadata $metadata): void
@@ -161,6 +276,9 @@ class AttributesFieldsMetadata implements FieldsMetadataCollector
                 \DateTime::class, \DateTimeImmutable::class => SPL_T_DATETIME,
                 default => null
             };
+            if ($metadata->type && FieldsManager::isListField($metadata->id)) {
+                $metadata->type .= LISTSPLIT.SPL_T_LIST;
+            }
         }
     }
 

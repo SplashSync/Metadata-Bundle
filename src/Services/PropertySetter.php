@@ -149,6 +149,7 @@ class PropertySetter
 
                 break;
             }
+            $updated = true;
         }
 
         return $updated;
