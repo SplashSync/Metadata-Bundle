@@ -44,9 +44,6 @@
         "splash/toolkit":                               "dev-master",
         "badpixxel/php-sdk":                            "dev-main"
     },
-    "provide": {
-        "splash/faker":                                 "dev-master"
-    },
     "config": {
         "allow-plugins": {
             "phpro/grumphp": true,
