@@ -174,6 +174,26 @@ class MetadataAdapter
     }
 
     /**
+     * Get Collection of Required Fields from Object Class Using Metadata
+     *
+     * @param class-string $class
+     *
+     * @return FieldMetadata[]
+     */
+    public function getRequiredFields(string $class): array
+    {
+        static $cache;
+
+        //====================================================================//
+        // Ensure Required Fields Cache is Loaded
+        $cache ??= array();
+        $cache[$class] ??= $this->collector->getRequiredFields($class)->toArray();
+
+        /** @var array<string, FieldMetadata[]> $cache */
+        return $cache[$class];
+    }
+
+    /**
      * Get Collection of Listed Fields from Object Class Using Metadata
      *
      * @param class-string $class

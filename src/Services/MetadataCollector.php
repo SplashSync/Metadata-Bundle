@@ -113,6 +113,23 @@ class MetadataCollector // extends FieldsFactory
     }
 
     /**
+     * Get Collection of Required Fields
+     *
+     * @param class-string $class
+     *
+     * @return Collection
+     */
+    public function getRequiredFields(string $class): Collection
+    {
+        $expressionBuilder = Criteria::expr();
+
+        $criteria = new Criteria();
+        $criteria->where($expressionBuilder->eq('required', true));
+
+        return $this->getFieldsMetadata($class)->matching($criteria);
+    }
+
+    /**
      * Collect Class Fields Metadata
      *
      * @param class-string $class
