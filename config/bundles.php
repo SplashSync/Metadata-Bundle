@@ -17,5 +17,6 @@ return array(
     //==============================================================================
     // SPLASH BUNDLES
     Splash\Metadata\SplashMetadataBundle::class => array("all" => true),
+    Splash\Connectors\Faker\FakerBundle::class => array(),
     Splash\Metadata\Test\Bundle\SplashMetadataTestBundle::class => array("all" => true),
 );
