@@ -174,8 +174,14 @@ class AttributesFieldsMetadata implements FieldsMetadataCollector
         if (!empty($metadata->name)) {
             return;
         }
-
-        $metadata->name = ucwords($phpProperty->getName());
+        //==============================================================================
+        // Field Name
+        $metadata->setName(ucwords($phpProperty->getName()));
+        //==============================================================================
+        // Field Description
+        if (!$metadata->hasDesc()) {
+            $metadata->setDesc(ucwords($phpProperty->getName()));
+        }
     }
 
     /**
