@@ -44,7 +44,7 @@ class Field implements FieldMetadataConfigurator
         //==============================================================================
         // Configure Type
         if ($this->type) {
-            $metadata->type = FieldsManager::isListField($metadata->type)
+            $metadata->type = FieldsManager::isListField($metadata->id)
                 ? $this->type.LISTSPLIT.SPL_T_LIST
                 : $this->type
             ;
