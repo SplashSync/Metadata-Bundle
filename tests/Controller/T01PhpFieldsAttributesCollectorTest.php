@@ -39,7 +39,7 @@ class T01PhpFieldsAttributesCollectorTest extends WebTestCase
         $this->validateFieldMetadata(IsTagged::class, "configFromPhp", array(
             "id" => "configFromPhp",
             "name" => "ConfigFromPhp",
-            "desc" => null,
+            "desc" => "ConfigFromPhp",
             "group" => null,
         ));
         $this->validateFieldMetadata(IsTagged::class, "configFromAttribute", array(
