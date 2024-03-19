@@ -58,6 +58,14 @@ class ShortEntity
     public ?string $url;
 
     /**
+     * Simple Direct Access Select
+     */
+    #[ORM\Column(type: Types::STRING, nullable: true)]
+    #[SPL\Field(type: SPL_T_VARCHAR, desc: "Choices loaded via PHP Attribute...")]
+    #[SPL\Choices(array("A" => "Value A", "B" => "Value B", "C" => "Value C"))]
+    public ?string $choice;
+
+    /**
      * Simple Direct Access Text
      */
     #[ORM\Column(type: Types::TEXT, nullable: true)]
