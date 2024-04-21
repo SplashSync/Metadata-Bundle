@@ -97,8 +97,13 @@ class PropertySetter
         // Load Children Object
         $children = $this->propertyAccessor->getProperty($object, $parentMetadata);
         //====================================================================//
+        // Empty Child & Empty Data => Nothing to do!
+        if (empty($children) && empty($fieldData)) {
+            return false;
+        }
+        //====================================================================//
         // Empty Child => Empty result
-        if (empty($children) && !empty($fieldData)) {
+        if (empty($children)) {
             $children = $this->propertyAccessor->createProperty($object, $parentMetadata);
             if (empty($children)) {
                 Splash::log()->err("Unable to create child property ".$parentMetadata->id);
