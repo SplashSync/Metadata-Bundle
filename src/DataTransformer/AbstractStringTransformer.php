@@ -43,6 +43,6 @@ abstract class AbstractStringTransformer implements FieldDataTransformer
      */
     public function isSame(object $subject, mixed $current, mixed $new): bool
     {
-        return ($current === $new);
+        return ($current == $new);
     }
 }
