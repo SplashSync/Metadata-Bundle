@@ -49,7 +49,7 @@ class DoctrineMetadata implements FieldsMetadataCollector
         }
         //==============================================================================
         // Walk on Class Fields
-        foreach($classMetadata->getFieldNames() as $fieldName) {
+        foreach ($classMetadata->getFieldNames() as $fieldName) {
             //==============================================================================
             // Check if Field is Managed
             try {
@@ -67,7 +67,7 @@ class DoctrineMetadata implements FieldsMetadataCollector
         }
         //==============================================================================
         // Walk on Class Associations
-        foreach($classMetadata->getAssociationMappings() as $associationMapping) {
+        foreach ($classMetadata->getAssociationMappings() as $associationMapping) {
             $this->getAssociationMetadata($collection, $classMetadata, $associationMapping);
         }
     }
@@ -90,7 +90,7 @@ class DoctrineMetadata implements FieldsMetadataCollector
 
         //==============================================================================
         // Walk on Class Fields
-        foreach($classMetadata->getFieldNames() as $fieldName) {
+        foreach ($classMetadata->getFieldNames() as $fieldName) {
             //==============================================================================
             // Check if Field is Managed
             $fieldMapping = $classMetadata->getFieldMapping($fieldName);
