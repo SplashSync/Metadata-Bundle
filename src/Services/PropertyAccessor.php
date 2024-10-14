@@ -15,6 +15,7 @@
 
 namespace Splash\Metadata\Services;
 
+use Splash\Client\Splash;
 use Splash\Metadata\Mapping\FieldMetadata;
 
 /**
@@ -102,6 +103,26 @@ class PropertyAccessor
         if (($field instanceof FieldMetadata) && ($factoryMethod = $field->getFactory())) {
             if (is_callable(array($object, $factoryMethod))) {
                 return $object->{ $factoryMethod }();
+            }
+        }
+        //====================================================================//
+        // Create with Child Class
+        if (($field instanceof FieldMetadata) && ($field->hasChildren())) {
+            $firstChild = $field->getChildren()[0] ?? null;
+            if (!$firstChild || !class_exists($childClass = (string) $firstChild->getChildClass())) {
+                return null;
+            }
+
+            //====================================================================//
+            // Try to Create Child Item
+            try {
+                return new $childClass($object);
+            } catch (\TypeError|\Exception $ex) {
+                Splash::log()->err(sprintf("Unable to create a new item with class '%s'. ", $childClass));
+                Splash::log()->err("You should register a factory method");
+                Splash::log()->report($ex);
+
+                return null;
             }
         }
 
