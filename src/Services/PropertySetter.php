@@ -141,7 +141,7 @@ class PropertySetter
                 $updated = $this->setListDataItem(
                     $parentMetadata,
                     $object,
-                    $itemData,
+                    (array) $itemData,
                     array_shift($originData)
                 ) || $updated;
             }
@@ -166,7 +166,7 @@ class PropertySetter
     private function setListDataItem(
         FieldMetadata $parentMetadata,
         object &$object,
-        iterable $itemData,
+        array $itemData,
         ?object $originItem
     ): ?bool {
         $updated = false;
