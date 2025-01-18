@@ -41,12 +41,13 @@
     
     "require-dev": {
         "splash/toolkit":                               "dev-master",
-        "badpixxel/php-sdk":                            "dev-main"
+        "badpixxel/php-sdk":                            "^2.0"
     },
     "config": {
         "allow-plugins": {
-            "phpro/grumphp": true,
-            "symfony/runtime": true
+            "phpro/grumphp-shim":                       true,
+            "phpro/grumphp":                            true,
+            "symfony/runtime":                          true
         }
     },
     "extra": {
