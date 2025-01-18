@@ -78,7 +78,7 @@ trait MetadataObjectTrait
             "allow_push_deleted" => $this->getObjectMetadata()->allowPushDeleted ?? static::$allowPushDeleted,
             //====================================================================//
             // Object Default Configuration
-            "enable_push_created" => $this->getObjectMetadata()->enablePullCreated ?? static::$enablePushCreated,
+            "enable_push_created" => $this->getObjectMetadata()->enablePushCreated ?? static::$enablePushCreated,
             "enable_push_updated" => $this->getObjectMetadata()->enablePushUpdated ?? static::$enablePushUpdated,
             "enable_push_deleted" => $this->getObjectMetadata()->enablePushDeleted ?? static::$enablePushDeleted,
             "enable_pull_created" => $this->getObjectMetadata()->enablePullCreated ?? static::$enablePullCreated,
