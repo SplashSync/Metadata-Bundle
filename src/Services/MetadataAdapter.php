@@ -194,13 +194,33 @@ class MetadataAdapter
     }
 
     /**
+     * Get Collection of On Create Fields from Object Class Using Metadata
+     *
+     * @param class-string $class
+     *
+     * @return FieldMetadata[]
+     */
+    public function getOnCreateFields(string $class): array
+    {
+        static $cache;
+
+        //====================================================================//
+        // Ensure Required Fields Cache is Loaded
+        $cache ??= array();
+        $cache[$class] ??= $this->collector->getOnCreateFields($class)->toArray();
+
+        /** @var array<string, FieldMetadata[]> $cache */
+        return $cache[$class];
+    }
+
+    /**
      * Get Collection of Listed Fields from Object Class Using Metadata
      *
      * @param class-string $class
      *
      * @return FieldMetadata[]
      */
-    private function getListedFields(string $class): array
+    public function getListedFields(string $class): array
     {
         static $cache;
 

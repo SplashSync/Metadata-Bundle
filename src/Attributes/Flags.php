@@ -27,6 +27,9 @@ use Splash\Metadata\Mapping\FieldMetadata;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Flags implements FieldMetadataConfigurator
 {
+    /**
+     * @SuppressWarnings(ExcessiveParameterList)
+     */
     public function __construct(
         //==============================================================================
         //      ACCESS PROPS
@@ -45,6 +48,7 @@ class Flags implements FieldMetadataConfigurator
         //==============================================================================
         //      EXTRA PROPS
         private readonly ?bool $searchable = null,
+        private readonly ?bool $usedOnCreate = null,
     ) {
     }
 
@@ -61,7 +65,7 @@ class Flags implements FieldMetadataConfigurator
     }
 
     /**
-     * @inheritDoc
+     * Configure Generic / Core Flags
      */
     private function configureMain(FieldMetadata $metadata): static
     {
@@ -85,7 +89,7 @@ class Flags implements FieldMetadataConfigurator
     }
 
     /**
-     * @inheritDoc
+     * Configure Listing Flags
      */
     private function configureLists(FieldMetadata $metadata): static
     {
@@ -105,12 +109,17 @@ class Flags implements FieldMetadataConfigurator
         if (isset($this->searchable)) {
             $metadata->setSearchable($this->searchable);
         }
+        //==============================================================================
+        // Configure Used On Create Flag
+        if (isset($this->usedOnCreate)) {
+            $metadata->setUsedOnCreate($this->usedOnCreate);
+        }
 
         return $this;
     }
 
     /**
-     * @inheritDoc
+     * Configure Metadata Specific Flags
      */
     private function configureMeta(FieldMetadata $metadata): static
     {

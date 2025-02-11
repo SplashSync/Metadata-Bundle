@@ -23,6 +23,8 @@ use Splash\Metadata\Mapping\FieldMetadata;
 
 /**
  * Splash Field Accessors Definitions
+ *
+ * Configure how this field is accessed by Splash Metadata Parser
  */
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class Accessor implements FieldMetadataConfigurator

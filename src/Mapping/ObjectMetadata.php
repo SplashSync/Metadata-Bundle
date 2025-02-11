@@ -28,7 +28,7 @@ class ObjectMetadata
     public ?bool $enablePushDeleted = null;
     public ?bool $enablePullCreated = null;
     public ?bool $enablePullUpdated = null;
-    public ?bool $enablePulDeleted = null;
+    public ?bool $enablePullDeleted = null;
 
     /**
      * @param class-string $class

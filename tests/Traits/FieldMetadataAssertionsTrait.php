@@ -17,6 +17,7 @@ namespace Splash\Metadata\Test\Traits;
 
 use Splash\Metadata\Mapping\FieldMetadata;
 use Splash\Metadata\Services\MetadataAdapter;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 
 trait FieldMetadataAssertionsTrait
 {
@@ -42,9 +43,16 @@ trait FieldMetadataAssertionsTrait
         $this->assertInstanceOf(FieldMetadata::class, $metadata);
         //====================================================================//
         // Verify Field Metadata
+        $propertyAccessor = PropertyAccess::createPropertyAccessor();
         foreach ($values as $key => $value) {
-            $this->assertObjectHasProperty($key, $metadata);
-            $this->assertSame($metadata->{$key}, $value);
+            $this->assertTrue(
+                $propertyAccessor->isReadable($metadata, $key),
+                sprintf("Unable to read filed metadata for property '%s'", $key)
+            );
+            $this->assertSame(
+                $propertyAccessor->getValue($metadata, $key),
+                $value
+            );
         }
     }
 }

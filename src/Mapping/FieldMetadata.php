@@ -41,6 +41,11 @@ class FieldMetadata extends ObjectField
     private bool $searchable = false;
 
     /**
+     * This Field is nopt required but Used for object creation
+     */
+    private bool $usedOnCreate = false;
+
+    /**
      * Excluded => Not Present in Fields List
      */
     private bool $excluded = false;
@@ -111,6 +116,26 @@ class FieldMetadata extends ObjectField
     public function isSearchable(): bool
     {
         return $this->searchable;
+    }
+
+    /**
+     * Mark this Field as Used on Create
+     */
+    public function setUsedOnCreate(?bool $usedOnCreate): static
+    {
+        if (isset($usedOnCreate)) {
+            $this->usedOnCreate = $usedOnCreate;
+        }
+
+        return $this;
+    }
+
+    /**
+     * This Field is Used on Create
+     */
+    public function isUsedOnCreate(): bool
+    {
+        return $this->usedOnCreate;
     }
 
     /**

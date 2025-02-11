@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 /**
  * Collect Medata for All Class Fields
  */
-class MetadataCollector // extends FieldsFactory
+class MetadataCollector
 {
     /**
      * @var array<class-string, ObjectMetadata>
@@ -125,6 +125,23 @@ class MetadataCollector // extends FieldsFactory
 
         $criteria = new Criteria();
         $criteria->where($expressionBuilder->eq('required', true));
+
+        return $this->getFieldsMetadata($class)->matching($criteria);
+    }
+
+    /**
+     * Get Collection of On Create Fields
+     *
+     * @param class-string $class
+     *
+     * @return Collection
+     */
+    public function getOnCreateFields(string $class): Collection
+    {
+        $expressionBuilder = Criteria::expr();
+
+        $criteria = new Criteria();
+        $criteria->where($expressionBuilder->eq('usedOnCreate', true));
 
         return $this->getFieldsMetadata($class)->matching($criteria);
     }

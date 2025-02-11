@@ -26,6 +26,8 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
  * Test Php Attributes Field Metadata Parsing
+ *
+ * @SuppressWarnings(TooManyPublicMethods)
  */
 class T01PhpFieldsAttributesCollectorTest extends WebTestCase
 {
@@ -39,13 +41,13 @@ class T01PhpFieldsAttributesCollectorTest extends WebTestCase
         $this->validateFieldMetadata(IsTagged::class, "configFromPhp", array(
             "id" => "configFromPhp",
             "name" => "ConfigFromPhp",
-            "desc" => "ConfigFromPhp",
+            "[desc]" => "ConfigFromPhp",
             "group" => null,
         ));
         $this->validateFieldMetadata(IsTagged::class, "configFromAttribute", array(
             "id" => "configFromAttribute",
             "name" => "Name",
-            "desc" => "Desc",
+            "[desc]" => "Desc",
             "group" => "Group",
         ));
     }
@@ -90,6 +92,27 @@ class T01PhpFieldsAttributesCollectorTest extends WebTestCase
 
         $this->validateFieldMetadata(IsFlagged::class, "requiredFromFlags", $expected);
         $this->validateFieldMetadata(IsFlagged::class, "requiredFromAttribute", $expected);
+    }
+
+    /**
+     * Test Detection of Listed Flag
+     */
+    public function testListedDetection(): void
+    {
+        $expected = array("inlist" => true);
+
+        $this->validateFieldMetadata(IsFlagged::class, "listedFromFlags", $expected);
+    }
+
+    /**
+     * Test Detection of Used on Create Flag
+     */
+    public function testUsedOnCreateDetection(): void
+    {
+        $expected = array("usedOnCreate" => true);
+
+        $this->validateFieldMetadata(IsFlagged::class, "onCreateFromFlags", $expected);
+        $this->validateFieldMetadata(IsFlagged::class, "onCreateFromAttribute", $expected);
     }
 
     /**

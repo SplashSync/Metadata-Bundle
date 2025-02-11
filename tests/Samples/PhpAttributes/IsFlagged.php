@@ -28,6 +28,15 @@ class IsFlagged
     #[SPL\IsRequired()]
     public ?string $requiredFromAttribute;
 
+    #[SPL\Flags(listed: true)]
+    public ?string $listedFromFlags;
+
+    #[SPL\Flags(usedOnCreate: true)]
+    public ?string $onCreateFromFlags;
+
+    #[SPL\UsedOnCreate()]
+    public ?string $onCreateFromAttribute;
+
     #[SPL\Flags(index: true)]
     public ?string $indexFromFlags;
 
